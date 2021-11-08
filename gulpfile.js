@@ -1,6 +1,5 @@
 let projectFolder = 'dist';
 let sourceFolder = '#src';
-let fs = require('fs');
 let path = {
     build: {
         html: projectFolder + "/",
@@ -34,23 +33,12 @@ autoprefixer = require('gulp-autoprefixer'),
 group_media = require('gulp-group-css-media-queries'),
 gulp_clean = require('gulp-clean-css'),
 rename = require('gulp-rename');
-//imagemin = require('gulp-imagemin');
+imagemin = require('gulp-imagemin');
 let scss = require('gulp-sass')(require('sass'));
 svgSprite = require('gulp-svg-sprites');
-//babel = require('gulp-babel');
+uglify = require('gulp-uglify-es').default;
 ttf2woff = require('gulp-ttf2woff'),
 ttf2woff2 = require('gulp-ttf2woff2');
-
-// Need to add babel settings for work with ES6
-// Need to add JS settings
-
-//gulp.task('default', () =>
-//    gulp.src('src/app.js')
-//        .pipe(babel({
-//            presets: ['@babel/env']
-//        }))
-//        .pipe(gulp.dest('dist'))
-//);
 
 function browserSync(params) {
     browsersync.init({
@@ -90,17 +78,31 @@ function css() {
    .pipe(browsersync.stream())
 }
 
-//function images() {
-//    return src(path.src.img)
-//     .pipe(imagemin({
-//        progressive: true,
-//        svgoPlugins: [{removeViewBox: false}],
-//        interlaced: true,
-//        optimizationLevel: 3,
-//    }))
-//    .pipe(dest(path.build.img))
-//    .pipe(browsersync.stream())
-//}
+function js() {
+    return src(path.src.js)
+    .pipe(fileinclude())
+    .pipe(dest(path.build.js))
+    .pipe(uglify())
+    .pipe(
+        rename({
+            extname: ".min.js"
+        })
+    )
+    .pipe(dest(path.build.js))
+    .pipe(browsersync.stream())
+}
+
+function images() {
+    return src(path.src.img)
+     .pipe(imagemin({
+        progressive: true,
+        svgoPlugins: [{removeViewBox: false}],
+        interlaced: true,
+        optimizationLevel: 3,
+    }))
+    .pipe(dest(path.build.img))
+    .pipe(browsersync.stream())
+}
 
 gulp.task('svgSprite', function() {
     return gulp.src([sourceFolder + '/iconsprite/ *.svg'])
@@ -129,29 +131,23 @@ function fonts() {
   
 }
 
-function fontsStyle(params) {
-
-}
-
-function callBack() {
-
-}
-
 function watchFiles(params){
    gulp.watch([path.watch.html], html);
    gulp.watch([path.watch.css], css);
-   //gulp.watch([path.watch.img], images);
+   gulp.watch([path.watch.js], js);
+   gulp.watch([path.watch.img], images);
 }
 
 function clean(params){
    return del(path.clean)
 }
 
-let build = gulp.series(clean, gulp.parallel(css, html, fonts));
+let build = gulp.series(clean, gulp.parallel(js, css, html, images, fonts));
 let watch = gulp.parallel(build, watchFiles, browserSync);
 
 exports.fonts = fonts;
-//exports.images = images;
+exports.images = images;
+exports.js = js;
 exports.css = css;
 exports.html = html;
 exports.build = build;
