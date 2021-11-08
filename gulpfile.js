@@ -1,92 +1,159 @@
- let projectFolder = 'dist';
- let sourceFolder = '#src';
- let path = {
-     build: {
-         html: projectFolder + "/",
-         css: projectFolder + '/css/',
-         js: projectFolder + '/js/',
-         img: projectFolder + '/img/',
-         fonts: projectFolder + '/fonts/',
-     },
-     src: {
-         html: [sourceFolder + "/*.html", '!' + sourceFolder + "/_*.html"],
-         css: sourceFolder + '/scss/style.scss',
-         js: sourceFolder + '/js/script.js',
-         img: sourceFolder + '/img/**/*.{jpg,png,svg,ico,webp}',
-         fonts: sourceFolder + '/fonts/*.ttf',
-     },
-     watch: {
-         html: sourceFolder + "/**/*.html",
-         css: sourceFolder + '/scss/**/*.scss',
-         js: sourceFolder + '/js/**/*.js',
-         img: sourceFolder + '/img/**/*.{jpg,png,svg,ico,webp}',
-     },
-     clean: './' + projectFolder + '/',
- } 
- 
- let {src, dest} = require('gulp'),
- gulp = require('gulp'),
- browsersync = require('browser-sync').create(),
- fileinclude = require('gulp-file-include'),
- del = require('del'),
- autoprefixer = require('gulp-autoprefixer'),
- group_media = require('gulp-group-css-media-queries'),
- gulp_clean = require('gulp-clean-css'),
- rename = require('gulp-rename')
- let scss = require('gulp-sass')(require('sass'));
+let projectFolder = 'dist';
+let sourceFolder = '#src';
+let fs = require('fs');
+let path = {
+    build: {
+        html: projectFolder + "/",
+        css: projectFolder + '/css/',
+        js: projectFolder + '/js/',
+        img: projectFolder + '/img/',
+        fonts: projectFolder + '/fonts/',
+    },
+    src: {
+        html: [sourceFolder + "/*.html", '!' + sourceFolder + "/_*.html"],
+        css: sourceFolder + '/scss/style.scss',
+        js: sourceFolder + '/js/script.js',
+        img: sourceFolder + '/img/**/*.{jpg,png,svg,ico,webp}',
+        fonts: sourceFolder + '/fonts/*.ttf',
+    },
+    watch: {
+        html: sourceFolder + "/**/*.html",
+        css: sourceFolder + '/scss/**/*.scss',
+        js: sourceFolder + '/js/**/*.js',
+        img: sourceFolder + '/img/**/*.{jpg,png,svg,ico,webp}',
+    },
+    clean: './' + projectFolder + '/',
+} 
 
- function browserSync(params) {
-     browsersync.init({
-         server: {
-             baseDir: "./" + projectFolder + "/"
-         },
-         port: 3000,
-         notify: false
-     })
- }
+let {src, dest} = require('gulp'),
+gulp = require('gulp'),
+browsersync = require('browser-sync').create(),
+fileinclude = require('gulp-file-include'),
+del = require('del'),
+autoprefixer = require('gulp-autoprefixer'),
+group_media = require('gulp-group-css-media-queries'),
+gulp_clean = require('gulp-clean-css'),
+rename = require('gulp-rename');
+//imagemin = require('gulp-imagemin');
+let scss = require('gulp-sass')(require('sass'));
+svgSprite = require('gulp-svg-sprites');
+//babel = require('gulp-babel');
+ttf2woff = require('gulp-ttf2woff'),
+ttf2woff2 = require('gulp-ttf2woff2');
 
- function html() {
-     return src(path.src.html)
-     .pipe(fileinclude())
-     .pipe(dest(path.build.html))
-     .pipe(browsersync.stream())
- }
+// Need to add babel settings for work with ES6
+// Need to add JS settings
 
- function css() {
-    return src(path.src.css)
-    .pipe(scss({
-        outputStyle: "expanded"
-        })
-    )
-    .pipe(group_media())
-    .pipe(
-        autoprefixer({
-            overrideBrowserlist: ['last 5 versions'],
-            cascade: true
-        }))
-    .pipe(dest(path.build.css))
-    .pipe(gulp_clean())
-    .pipe (rename({
-        extname: '.min.css'
-        }))
-    .pipe(dest(path.build.css))
+//gulp.task('default', () =>
+//    gulp.src('src/app.js')
+//        .pipe(babel({
+//            presets: ['@babel/env']
+//        }))
+//        .pipe(gulp.dest('dist'))
+//);
+
+function browserSync(params) {
+    browsersync.init({
+        server: {
+            baseDir: "./" + projectFolder + "/"
+        },
+        port: 3000,
+        notify: false
+    })
+}
+
+function html() {
+    return src(path.src.html)
+    .pipe(fileinclude())
+    .pipe(dest(path.build.html))
     .pipe(browsersync.stream())
- }
+}
+
+function css() {
+   return src(path.src.css)
+   .pipe(scss({
+       outputStyle: "expanded"
+       })
+   )
+   .pipe(group_media())
+   .pipe(
+       autoprefixer({
+           overrideBrowserlist: ['last 5 versions'],
+           cascade: true
+       }))
+   .pipe(dest(path.build.css))
+   .pipe(gulp_clean())
+   .pipe (rename({
+       extname: '.min.css'
+       }))
+   .pipe(dest(path.build.css))
+   .pipe(browsersync.stream())
+}
+
+//function images() {
+//    return src(path.src.img)
+//     .pipe(imagemin({
+//        progressive: true,
+//        svgoPlugins: [{removeViewBox: false}],
+//        interlaced: true,
+//        optimizationLevel: 3,
+//    }))
+//    .pipe(dest(path.build.img))
+//    .pipe(browsersync.stream())
+//}
+
+gulp.task('svgSprite', function() {
+    return gulp.src([sourceFolder + '/iconsprite/ *.svg'])
+    .pipe(svgSprite({
+        mode: {
+            stack: {
+                sprite: '../icons/icons.svg',
+                example: true
+            }
+        },
+    }))
+    .pipe(dest(path.build.img))
+})
+
+
+function fonts() {
+    src(path.src.fonts)
+
+    .pipe(ttf2woff())
+    .pipe(dest(path.build.fonts))
+
+    return src(path.src.fonts)
+
+    .pipe(ttf2woff2())
+    .pipe(dest(path.build.fonts))
+  
+}
+
+function fontsStyle(params) {
+
+}
+
+function callBack() {
+
+}
 
 function watchFiles(params){
-    gulp.watch([path.watch.html], html);
-    gulp.watch([path.watch.css], css);
+   gulp.watch([path.watch.html], html);
+   gulp.watch([path.watch.css], css);
+   //gulp.watch([path.watch.img], images);
 }
 
 function clean(params){
-    return del(path.clean)
+   return del(path.clean)
 }
 
- let build = gulp.series(clean, gulp.parallel(css, html));
- let watch = gulp.parallel(build, watchFiles, browserSync);
+let build = gulp.series(clean, gulp.parallel(css, html, fonts));
+let watch = gulp.parallel(build, watchFiles, browserSync);
 
- exports.css = css;
- exports.html = html;
- exports.build = build;
- exports.watch = watch;
- exports.default = watch;
+exports.fonts = fonts;
+//exports.images = images;
+exports.css = css;
+exports.html = html;
+exports.build = build;
+exports.watch = watch;
+exports.default = watch;
