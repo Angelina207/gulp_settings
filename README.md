@@ -8,13 +8,9 @@
             "@scss": "${folder}/src/scss",
             "@js": "${folder}/src/js",
         }
-3. Все пути теперь прописываем так:
-<header>
-    <h1>Hello world!</h1>
+3. Все пути теперь прописываем так: 
     <img src="@img/img1.jpg" alt="">
-</header>
+    
 4. Таким образом редактор будет считывать правильную папку, и на выходе в исходном коде мы получим следующее:
-<header>
-    <h1>Hello world!</h1>
     <img src="img/img1.jpg" alt="">
-</header>
+
